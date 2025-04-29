@@ -2,7 +2,7 @@ import os
 import asyncio
 import argparse
 from datetime import datetime, timedelta
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional, Union
 from dotenv import load_dotenv
 
 import discord
@@ -14,6 +14,8 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from colorama import init, Fore, Back, Style
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 
 # Initialize colorama
 init(autoreset=True)
@@ -23,10 +25,11 @@ load_dotenv(override=True)
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(
-    description="Fetch Discord chat history and save to file"
+    description="Fetch and summarize chat history from Discord or Slack channels"
 )
 parser.add_argument("--since-days", type=int, required=True, help="Number of days to look back from today")
-parser.add_argument("--channel", required=True, help="Discord channel ID")
+parser.add_argument("--platform", choices=["discord", "slack"], default="discord", help="Platform to fetch messages from (default: discord)")
+parser.add_argument("--channel", required=True, help="Channel ID (Discord) or Channel name (Slack)")
 parser.add_argument(
     "--model-source",
     choices=["local", "remote"],
@@ -60,18 +63,28 @@ args = parser.parse_args()
 since_date = datetime.now() - timedelta(days=args.since_days)
 print(f"{Fore.CYAN}→ Looking back {Fore.YELLOW}{args.since_days}{Fore.CYAN} days from today ({Fore.GREEN}{since_date.date()}{Fore.CYAN}){Style.RESET_ALL}")
 
-# Get channel ID
-try:
-    channel_id = int(args.channel)
-except ValueError:
-    print(f"{Fore.RED}Error: Invalid channel ID{Style.RESET_ALL}")
-    exit(1)
+# Get channel ID/name
+channel_identifier = args.channel
 
-# Get Discord token
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-if not DISCORD_TOKEN:
-    print(f"{Fore.RED}Error: DISCORD_TOKEN environment variable is not set{Style.RESET_ALL}")
-    exit(1)
+# Get platform-specific tokens
+if args.platform == "discord":
+    # Get Discord token
+    DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+    if not DISCORD_TOKEN:
+        print(f"{Fore.RED}Error: DISCORD_TOKEN environment variable is not set{Style.RESET_ALL}")
+        exit(1)
+    
+    try:
+        channel_id = int(channel_identifier)
+    except ValueError:
+        print(f"{Fore.RED}Error: Invalid Discord channel ID{Style.RESET_ALL}")
+        exit(1)
+else:  # Slack
+    # Get Slack token
+    SLACK_TOKEN = os.getenv("SLACK_TOKEN")
+    if not SLACK_TOKEN:
+        print(f"{Fore.RED}Error: SLACK_TOKEN environment variable is not set{Style.RESET_ALL}")
+        exit(1)
 
 # Get OpenAI API key if using remote model
 if args.model_source == "remote":
@@ -79,11 +92,6 @@ if args.model_source == "remote":
     if not OPENAI_API_KEY:
         print(f"{Fore.RED}Error: OPENAI_API_KEY environment variable is not set{Style.RESET_ALL}")
         exit(1)
-
-# Initialize Discord client with intents
-intents = discord.Intents.default()
-intents.message_content = True
-bot = commands.Bot(command_prefix="!", intents=intents)
 
 # User mapping cache
 user_mapping = {}
@@ -97,7 +105,7 @@ async def fetch_discord_messages(
     Returns:
         tuple: (formatted_history, first_message_date)
     """
-    print(f"\n{Fore.CYAN}→ Fetching messages from channel {Fore.YELLOW}{channel_id}{Fore.CYAN} since {Fore.GREEN}{since_date.date()}{Style.RESET_ALL}")
+    print(f"\n{Fore.CYAN}→ Fetching messages from Discord channel {Fore.YELLOW}{channel_id}{Fore.CYAN} since {Fore.GREEN}{since_date.date()}{Style.RESET_ALL}")
 
     channel = bot.get_channel(channel_id)
     if not channel:
@@ -214,6 +222,195 @@ async def fetch_discord_messages(
     return formatted_history, first_message_date
 
 
+def fetch_slack_messages(
+    channel_name: str, since_date: datetime
+) -> tuple[str, datetime]:
+    """Fetch messages from a Slack channel since a specific date and format them as a human-readable chat history.
+
+    Returns:
+        tuple: (formatted_history, first_message_date)
+    """
+    print(f"\n{Fore.CYAN}→ Fetching messages from Slack channel {Fore.YELLOW}{channel_name}{Fore.CYAN} since {Fore.GREEN}{since_date.date()}{Style.RESET_ALL}")
+
+    # Initialize Slack client
+    client = WebClient(token=SLACK_TOKEN)
+    
+    # Get channel ID from channel name
+    try:
+        # List all channels to find the one we want
+        result = client.conversations_list()
+        channel_id = None
+        channel_info = None
+        
+        for channel in result["channels"]:
+            if channel["name"] == channel_name:
+                channel_id = channel["id"]
+                channel_info = channel
+                break
+        
+        if not channel_id:
+            print(f"    {Fore.RED}Error: Channel {channel_name} not found{Style.RESET_ALL}")
+            return "", since_date
+        
+        print(f"    {Fore.GREEN}Found channel: {channel_info['name']}{Style.RESET_ALL}")
+        
+        # Create a human-readable chat history
+        chat_history = []
+        message_count = 0
+        thread_count = 0
+        print(f"    {Fore.CYAN}Fetching messages...{Style.RESET_ALL}", end="", flush=True)
+        
+        # Clear the user mapping cache for this fetch
+        global user_mapping
+        user_mapping = {}
+        
+        # Track the first message date
+        first_message_date = None
+        
+        # Convert since_date to Unix timestamp
+        since_timestamp = since_date.timestamp()
+        
+        # Fetch messages from the channel
+        cursor = None
+        has_more = True
+        
+        while has_more:
+            try:
+                result = client.conversations_history(
+                    channel=channel_id,
+                    oldest=since_timestamp,
+                    cursor=cursor,
+                    limit=100
+                )
+                
+                messages = result["messages"]
+                has_more = result["has_more"]
+                cursor = result.get("response_metadata", {}).get("next_cursor")
+                
+                for message in messages:
+                    message_count += 1
+                    if message_count % 100 == 0:
+                        print(f"{Fore.CYAN}.{Style.RESET_ALL}", end="", flush=True)
+                    
+                    # Skip messages without text
+                    if "text" not in message:
+                        continue
+                    
+                    # Get message timestamp
+                    message_timestamp = float(message["ts"])
+                    message_date = datetime.fromtimestamp(message_timestamp)
+                    
+                    # Update first message date if not set yet
+                    if first_message_date is None:
+                        first_message_date = message_date
+                    
+                    # Get user info
+                    user_id = message.get("user", "UNKNOWN")
+                    username = "UNKNOWN"
+                    
+                    if user_id != "UNKNOWN":
+                        try:
+                            user_info = client.users_info(user=user_id)
+                            username = user_info["user"]["name"]
+                            user_mapping[username] = user_id
+                        except SlackApiError:
+                            username = f"User_{user_id}"
+                    
+                    # Format message
+                    timestamp_str = message_date.strftime("%Y-%m-%d %H:%M:%S")
+                    formatted_message = f"[{timestamp_str}] {username}: {message['text']}"
+                    
+                    # Add message to chat history
+                    chat_history.append(formatted_message)
+                    
+                    # Check for thread replies
+                    if "thread_ts" in message and message["thread_ts"] == message["ts"]:
+                        # This is a thread parent message
+                        thread_count += 1
+                        print(f"\n    {Fore.MAGENTA}Found thread{Style.RESET_ALL}")
+                        
+                        # Add thread header
+                        chat_history.append(f"\n--- Thread ---")
+                        
+                        # Fetch thread replies
+                        thread_result = client.conversations_replies(
+                            channel=channel_id,
+                            ts=message["ts"]
+                        )
+                        
+                        thread_messages = thread_result["messages"]
+                        thread_message_count = 0
+                        
+                        for thread_message in thread_messages[1:]:  # Skip the parent message
+                            thread_message_count += 1
+                            if thread_message_count % 100 == 0:
+                                print(f"{Fore.CYAN}.{Style.RESET_ALL}", end="", flush=True)
+                            
+                            # Skip messages without text
+                            if "text" not in thread_message:
+                                continue
+                            
+                            # Get thread message timestamp
+                            thread_timestamp = float(thread_message["ts"])
+                            thread_date = datetime.fromtimestamp(thread_timestamp)
+                            
+                            # Get thread user info
+                            thread_user_id = thread_message.get("user", "UNKNOWN")
+                            thread_username = "UNKNOWN"
+                            
+                            if thread_user_id != "UNKNOWN":
+                                try:
+                                    thread_user_info = client.users_info(user=thread_user_id)
+                                    thread_username = thread_user_info["user"]["name"]
+                                    user_mapping[thread_username] = thread_user_id
+                                except SlackApiError:
+                                    thread_username = f"User_{thread_user_id}"
+                            
+                            # Format thread message
+                            thread_timestamp_str = thread_date.strftime("%Y-%m-%d %H:%M:%S")
+                            formatted_thread_message = f"[{thread_timestamp_str}] {thread_username}: {thread_message['text']}"
+                            
+                            # Add thread message to chat history
+                            chat_history.append(formatted_thread_message)
+                        
+                        print(f"\n    {Fore.GREEN}Processed {thread_message_count} messages in thread{Style.RESET_ALL}")
+                        chat_history.append("--- End of Thread ---\n")
+                
+            except SlackApiError as e:
+                print(f"\n    {Fore.RED}Error: Slack API error: {str(e)}{Style.RESET_ALL}")
+                return "", since_date
+            except Exception as e:
+                print(f"\n    {Fore.RED}Error: Unexpected error while fetching messages: {str(e)}{Style.RESET_ALL}")
+                import traceback
+                
+                print(f"    {Fore.RED}Error Traceback: {traceback.format_exc()}{Style.RESET_ALL}")
+                return "", since_date
+        
+        print(f"\n    {Fore.GREEN}Total messages scanned: {message_count}{Style.RESET_ALL}")
+        print(f"    {Fore.GREEN}Total threads scanned: {thread_count}{Style.RESET_ALL}")
+        print(f"    {Fore.GREEN}Total unique users: {len(user_mapping)}{Style.RESET_ALL}")
+        
+        # If no messages were found, use the since_date
+        if first_message_date is None:
+            first_message_date = since_date
+        else:
+            print(f"    {Fore.GREEN}First message date: {first_message_date.date()}{Style.RESET_ALL}")
+        
+        # Join all messages with newlines to create a single string
+        formatted_history = "\n".join(chat_history)
+        return formatted_history, first_message_date
+        
+    except SlackApiError as e:
+        print(f"\n    {Fore.RED}Error: Slack API error: {str(e)}{Style.RESET_ALL}")
+        return "", since_date
+    except Exception as e:
+        print(f"\n    {Fore.RED}Error: Unexpected error while fetching messages: {str(e)}{Style.RESET_ALL}")
+        import traceback
+        
+        print(f"    {Fore.RED}Error Traceback: {traceback.format_exc()}{Style.RESET_ALL}")
+        return "", since_date
+
+
 def standardize_user_references(chat_history: str) -> str:
     """Standardize user references in the chat history by replacing usernames with consistent IDs."""
     # Create a mapping of usernames to their IDs
@@ -312,7 +509,7 @@ General Writing Instructions (all cases):
                 ("system", system_prompt),
                 (
                     "human",
-                    "Here is the Discord chat history to summarize: {chat_history}",
+                    "Here is the chat history to summarize: {chat_history}",
                 ),
             ]
         )
@@ -351,7 +548,7 @@ def create_chat_chain(chat_history: str):
     
     # Create the system prompt
     system_prompt = f"""
-You are a helpful assistant with access to a Discord chat history. 
+You are a helpful assistant with access to a chat history. 
 You can answer questions about the content of this chat history.
 
 Here is the chat history you have access to:
@@ -363,7 +560,7 @@ When answering questions:
 2. Only reference information that is in the chat history
 3. If you don't know something, say so
 4. Use markdown formatting for better readability
-5. When mentioning users, use their Discord IDs (like <@123456789012345678>)
+5. When mentioning users, use their IDs (like <@123456789012345678>)
 """
     
     # Create the prompt template
@@ -459,15 +656,25 @@ def interactive_chat_session(chat_history: str):
             print(f"{Fore.RED}Error: {str(e)}{Style.RESET_ALL}")
             print(f"{Fore.YELLOW}Please try again.{Style.RESET_ALL}")
 
+# Initialize Discord client with intents
+intents = discord.Intents.default()
+intents.message_content = True
+bot = commands.Bot(command_prefix="!", intents=intents)
+
 @bot.event
 async def on_ready():
     print(f"{Fore.GREEN}{bot.user}{Fore.CYAN} is now running!{Style.RESET_ALL}")
 
     try:
-        # Fetch messages
-        chat_history, first_message_date = await fetch_discord_messages(
-            channel_id, since_date
-        )
+        # Fetch messages based on platform
+        if args.platform == "discord":
+            chat_history, first_message_date = await fetch_discord_messages(
+                channel_id, since_date
+            )
+        else:  # Slack
+            chat_history, first_message_date = fetch_slack_messages(
+                channel_identifier, since_date
+            )
 
         if not chat_history:
             print(f"{Fore.RED}No messages found or error occurred{Style.RESET_ALL}")
@@ -478,8 +685,12 @@ async def on_ready():
         standardized_history = standardize_user_references(chat_history)
 
         # Create filename based on channel, first message date, and today's date
-        channel = bot.get_channel(channel_id)
-        channel_name = channel.name if channel else str(channel_id)
+        if args.platform == "discord":
+            channel = bot.get_channel(channel_id)
+            channel_name = channel.name if channel else str(channel_id)
+        else:  # Slack
+            channel_name = channel_identifier
+            
         today = datetime.now().strftime("%Y-%m-%d")
         first_date_str = first_message_date.strftime("%Y-%m-%d")
 
@@ -499,7 +710,7 @@ async def on_ready():
             if os.path.isdir(args.dump_file):
                 summary_filename = os.path.join(
                     args.dump_file,
-                    f"discord_history_summary_{channel_name}_{first_date_str}_{today}.md"
+                    f"{args.platform}_history_summary_{channel_name}_{first_date_str}_{today}.md"
                 )
             else:
                 summary_filename = args.dump_file
@@ -514,12 +725,12 @@ async def on_ready():
                 if os.path.isdir(args.dump_file):
                     full_history_filename = os.path.join(
                         args.dump_file,
-                        f"discord_history_{channel_name}_{first_date_str}_{today}.md"
+                        f"{args.platform}_history_{channel_name}_{first_date_str}_{today}.md"
                     )
                 else:
                     full_history_filename = os.path.join(
                         os.path.dirname(args.dump_file),
-                        f"discord_history_{channel_name}_{first_date_str}_{today}.md"
+                        f"{args.platform}_history_{channel_name}_{first_date_str}_{today}.md"
                     )
                 with open(full_history_filename, "w", encoding="utf-8") as f:
                     f.write(standardized_history)
@@ -546,8 +757,86 @@ async def on_ready():
 
 
 async def main():
-    async with bot:
-        await bot.start(DISCORD_TOKEN)
+    if args.platform == "discord":
+        async with bot:
+            await bot.start(DISCORD_TOKEN)
+    else:  # Slack
+        # For Slack, we don't need to use the Discord bot
+        try:
+            # Fetch messages
+            chat_history, first_message_date = fetch_slack_messages(
+                channel_identifier, since_date
+            )
+
+            if not chat_history:
+                print(f"{Fore.RED}No messages found or error occurred{Style.RESET_ALL}")
+                return
+
+            # Standardize user references
+            standardized_history = standardize_user_references(chat_history)
+
+            # Create filename based on channel, first message date, and today's date
+            channel_name = channel_identifier
+            today = datetime.now().strftime("%Y-%m-%d")
+            first_date_str = first_message_date.strftime("%Y-%m-%d")
+
+            # Generate summary
+            summary = generate_summary(standardized_history)
+
+            # Post-process the summary to replace user IDs with usernames
+            processed_summary = replace_user_ids_with_names(summary)
+
+            if args.dump_file is not None:
+                # Create the output directory if it doesn't exist
+                output_dir = args.dump_file if os.path.isdir(args.dump_file) else os.path.dirname(args.dump_file)
+                if output_dir and not os.path.exists(output_dir):
+                    os.makedirs(output_dir)
+
+                # Determine the output path for the summary
+                if os.path.isdir(args.dump_file):
+                    summary_filename = os.path.join(
+                        args.dump_file,
+                        f"slack_history_summary_{channel_name}_{first_date_str}_{today}.md"
+                    )
+                else:
+                    summary_filename = args.dump_file
+
+                # Save the summary
+                with open(summary_filename, "w", encoding="utf-8") as f:
+                    f.write(processed_summary)
+                print(f"\n{Fore.GREEN}→ Summary saved to {summary_filename}{Style.RESET_ALL}")
+
+                # Save the full history if requested
+                if args.dump_collected_chat_history:
+                    if os.path.isdir(args.dump_file):
+                        full_history_filename = os.path.join(
+                            args.dump_file,
+                            f"slack_history_{channel_name}_{first_date_str}_{today}.md"
+                        )
+                    else:
+                        full_history_filename = os.path.join(
+                            os.path.dirname(args.dump_file),
+                            f"slack_history_{channel_name}_{first_date_str}_{today}.md"
+                        )
+                    with open(full_history_filename, "w", encoding="utf-8") as f:
+                        f.write(standardized_history)
+                    print(f"{Fore.GREEN}→ Full chat history saved to {full_history_filename}{Style.RESET_ALL}")
+            else:
+                # Print the summary to terminal
+                print(f"\n{Fore.CYAN}{Style.BRIGHT}→ Generated Summary:{Style.RESET_ALL}")
+                print(f"{Fore.CYAN}{'=' * 80}{Style.RESET_ALL}")
+                print(processed_summary)
+                print(f"{Fore.CYAN}{'=' * 80}{Style.RESET_ALL}")
+            
+            # Start interactive chat session if requested
+            if args.chat:
+                interactive_chat_session(standardized_history)
+
+        except Exception as e:
+            print(f"{Fore.RED}Error: {str(e)}{Style.RESET_ALL}")
+            import traceback
+
+            print(f"{Fore.RED}Error Traceback: {traceback.format_exc()}{Style.RESET_ALL}")
 
 
 if __name__ == "__main__":
