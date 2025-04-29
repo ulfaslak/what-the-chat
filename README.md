@@ -7,8 +7,9 @@ A Python tool for fetching and summarizing Discord chat history from specific ch
 This tool allows you to:
 - Fetch all messages from a Discord channel since a specified date
 - Include messages from threads within the channel
-- Generate a structured summary of the chat history using OpenAI's GPT-4 Turbo
+- Generate a structured summary of the chat history using either local or remote LLMs
 - Save both the full chat history and the summary to text files
+- Interact with the chat history through an interactive chat session
 
 ## Features
 
@@ -21,6 +22,9 @@ This tool allows you to:
   - Full Project Status Summary (7+ days)
 - **User-Friendly Output**: Replaces Discord user IDs with actual usernames in the summary for better readability
 - **Accurate Filenames**: Uses the actual first message date in filenames for accurate time range representation
+- **Model Flexibility**: Supports both local models (via Ollama) and remote models (via OpenAI)
+- **Interactive Chat**: Allows users to ask questions about the chat history in an interactive session
+- **Colorful Terminal Output**: Provides clear visual cues with color-coded output and action indicators
 
 ## Installation
 
@@ -40,38 +44,62 @@ This tool allows you to:
 3. Create a `.env` file in the root directory with the following variables (see **Discord Bot Setup** section below for more details on how to attain a Discord bot token):
    ```
    DISCORD_TOKEN=your_discord_bot_token
-   OPENAI_API_KEY=your_openai_api_key
+   OPENAI_API_KEY=your_openai_api_key  # Only needed if using remote models
    ```
 
 ## Usage
 
 ### Basic Usage
 
-To fetch chat history from a Discord channel since a specific date, and return a summary:
+To fetch chat history from a Discord channel for the last 30 days, generate a summary, and start an interactive chat session:
 
 ```
-python fetch_discord_history.py --since 2024-04-01 --channel 123456789012345678 --summarize
+python summarize.py --since-days 30 --channel 123456789012345678 --chat
+```
+
+This will:
+1. Fetch messages from the specified channel for the last 30 days
+2. Generate a summary of the chat history
+3. Start an interactive chat session where you can ask questions about the chat history
+
+### Saving to Files
+
+To save the summary and/or full chat history to files:
+
+```
+python summarize.py --since-days 30 --channel 123456789012345678 --dump-file ./output --dump-collected-chat-history
 ```
 
 This will save:
-1. The summary to a file named `discord_history_summary_[channel_name]_[first_message_date]_[today's_date].md`
-2. The full chat history to a file named `discord_history_[channel_name]_[first_message_date]_[today's_date].md`
+1. The summary to a file named `discord_history_summary_[channel_name]_[first_message_date]_[today's_date].md` in the `./output` directory
+2. The full chat history to a file named `discord_history_[channel_name]_[first_message_date]_[today's_date].md` in the `./output` directory
 
-### Without Summarization
+### Using Remote Models
 
-To fetch chat history without generating a summary:
+To use a remote model (e.g., GPT-4 Turbo) instead of the default local model:
 
 ```
-python fetch_discord_history.py --since 2024-04-01 --channel 123456789012345678
+python summarize.py --since-days 30 --channel 123456789012345678 --model-source remote --model gpt-4-turbo
 ```
-
-This will save the chat history to a file named `discord_history___[channel_name]___[first_message_date]__[today's_date].md`.
 
 ## Command Line Arguments
 
-- `--since`: Start date in YYYY-MM-DD format (required)
+- `--since-days`: Number of days to look back from today (required)
 - `--channel`: Discord channel ID (required)
-- `--summarize`: Flag to generate a summary of the chat history (optional)
+- `--model-source`: Source of the model to use for summarization (choices: "local", "remote", default: "local")
+- `--model`: Name of the model to use (default: "deepseek-r1-distill-qwen-7b" for local, "gpt-4-turbo" for remote)
+- `--dump-file`: Optional: Save summary to a markdown file. If no path is provided, saves to current directory.
+- `--dump-collected-chat-history`: Optional: Save the collected chat history to a file alongside the summary
+- `--chat`: Optional: Start an interactive chat session with the collected conversation history
+
+## Interactive Chat Commands
+
+When in the interactive chat session, the following commands are available:
+
+- `help`: Show available commands
+- `exit`, `quit`, or `q`: End the chat session
+- `summary`: Generate a summary of the chat history
+- `users`: List all users mentioned in the chat history
 
 ## Requirements
 
@@ -79,7 +107,9 @@ This will save the chat history to a file named `discord_history___[channel_name
 - discord.py
 - langchain
 - langchain-openai
+- langchain-community
 - python-dotenv
+- colorama
 
 ## Discord Bot Setup
 
