@@ -2,6 +2,8 @@
 
 A Python tool for fetching and summarizing chat history from Discord or Slack channels.
 
+https://github.com/user-attachments/assets/efc9d54e-eff4-4528-b7dd-43994660e96d
+
 ## Overview
 
 This tool allows you to:
