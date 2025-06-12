@@ -456,8 +456,8 @@ Your task is to read a sequence of messages and generate a clear, structured sum
 
 First, determine the time span covered by the chat messages you receive:
 	•	If the messages span 0–2 days, produce a Project Event Update.
-	•	If the messages span 3–6 days, produce a Periodical Digest.
-	•	If the messages span 7 or more days, produce a Full Project Status Summary.
+	•	If the messages span 3–7 days, produce a Periodical Digest.
+	•	If the messages span 8 or more days, produce a Full Project Status Summary.
 
 ⸻
 
@@ -470,7 +470,7 @@ Instructions for a Project Event Update (0–2 days):
 	•	Suitable for project manager who wants a daily digest.
 
 
-Instructions for a Periodical Digest (3–6 days):
+Instructions for a Periodical Digest (3–7 days):
 	•	Focus on trends, major developments, and overall project movement.
 	•	Summarize key achievements and broader tasks or challenges.
 	•	Group contributions by theme or workstream rather than by individual post.
@@ -478,7 +478,7 @@ Instructions for a Periodical Digest (3–6 days):
 	•	Identify any emerging risks, open technical questions, or important strategic discussions.
 	•	Keep it compact but higher-level, suitable for someone catching up after a few days away.
 
-Instructions for a Full Project Status Summary (7+ days):
+Instructions for a Full Project Status Summary (8+ days):
 	•	Provide a comprehensive overview, blending a timeline of major actions with a strategic status view.
     •	Answer first the question: "What is this {{project/workshop/etc}} about?" (infer what it actually is from the chat history, and ask the right question).
 	•	Then highlight:
