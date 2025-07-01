@@ -613,8 +613,8 @@ def create_chat_chain(chat_history: str):
         print(f"    {Fore.YELLOW}Using local model: {args.model}{Style.RESET_ALL}")
         llm = Ollama(model=args.model)
 
-    # Create the system prompt
-    system_prompt = f"""
+    # Create the system prompt template (without embedding chat_history directly)
+    system_prompt = """
 You are a helpful assistant with access to a chat history. 
 You can answer questions about the content of this chat history.
 
@@ -639,9 +639,12 @@ When answering questions:
         ]
     )
 
-    # Create the chain
+    # Create the chain that passes chat_history as a variable
     chain = (
-        RunnablePassthrough.assign(history=lambda x: x.get("history", []))
+        RunnablePassthrough.assign(
+            history=lambda x: x.get("history", []),
+            chat_history=lambda x: chat_history
+        )
         | prompt
         | llm
         | StrOutputParser()
