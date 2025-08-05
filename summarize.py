@@ -8,8 +8,8 @@ import discord
 from discord.ext import commands
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
-from langchain_community.llms import Ollama
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_ollama import OllamaLLM
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from colorama import init, Fore, Style
@@ -275,11 +275,12 @@ def fetch_slack_messages(
     # Get channel ID from channel name
     try:
         # List all channels to find the one we want
-        result = client.conversations_list()
+        # include public and private channels
+        public_result = client.conversations_list(types="public_channel")
+        private_result = client.conversations_list(types="private_channel")
         channel_id = None
         channel_info = None
-
-        for channel in result["channels"]:
+        for channel in public_result["channels"] + private_result["channels"]:
             if channel["name"] == channel_name:
                 channel_id = channel["id"]
                 channel_info = channel
@@ -584,7 +585,7 @@ General Writing Instructions (all cases):
             llm = ChatOpenAI(model=args.model, temperature=0)
         else:  # local model
             print(f"    {Fore.YELLOW}Using local model: {args.model}{Style.RESET_ALL}")
-            llm = Ollama(model=args.model)
+            llm = OllamaLLM(model=args.model)
 
         # Create the chain
         chain = prompt | llm
@@ -611,9 +612,9 @@ def create_chat_chain(chat_history: str):
         llm = ChatOpenAI(model=args.model, temperature=0.7)
     else:  # local model
         print(f"    {Fore.YELLOW}Using local model: {args.model}{Style.RESET_ALL}")
-        llm = Ollama(model=args.model)
-
-    # Create the system prompt template (without embedding chat_history directly)
+        llm = OllamaLLM(model=args.model)
+    
+    # Create the system prompt template
     system_prompt = """
 You are a helpful assistant with access to a chat history. 
 You can answer questions about the content of this chat history.
