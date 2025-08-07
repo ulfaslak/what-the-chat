@@ -109,15 +109,15 @@ Get a 30-day summary with interactive chat:
 
 ```bash
 # Using pixi
-pixi run python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 --chat
+pixi run python apps/launch_cli.py --since-days 30 --channel 123456789012345678 --chat
 
 # Or direct script execution
-python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 --chat
+python apps/launch_cli.py --since-days 30 --channel 123456789012345678 --chat
 ```
 
 **Slack channels:**
 ```bash
-python scripts/launch_cli.py --since-days 30 --platform slack --channel general --chat
+python apps/launch_cli.py --since-days 30 --platform slack --channel general --chat
 ```
 
 **✨ What happens:**
@@ -130,7 +130,7 @@ python scripts/launch_cli.py --since-days 30 --platform slack --channel general 
 Save everything for later analysis:
 
 ```bash
-python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 \
+python apps/launch_cli.py --since-days 30 --channel 123456789012345678 \
   --dump-file ./output --dump-collected-chat-history
 ```
 
@@ -143,7 +143,7 @@ python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 \
 Switch to powerful cloud models:
 
 ```bash
-python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 \
+python apps/launch_cli.py --since-days 30 --channel 123456789012345678 \
   --model-source remote --model gpt-4o
 ```
 
