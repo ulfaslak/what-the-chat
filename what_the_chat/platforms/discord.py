@@ -11,7 +11,13 @@ from colorama import Fore, Style
 class DiscordPlatform:
     """Discord platform integration for message fetching and bot management."""
     
-    def __init__(self):
+    def __init__(self, token: str = None):
+        """Initialize the Discord platform.
+        
+        Args:
+            token: Discord bot token (required for fetch_messages)
+        """
+        self.token = token
         self.user_mapping: Dict[str, str] = {}
     
     def create_bot(self) -> commands.Bot:
@@ -167,3 +173,42 @@ class DiscordPlatform:
     def get_user_mapping(self) -> Dict[str, str]:
         """Get the current user mapping dictionary."""
         return self.user_mapping.copy()
+    
+    async def fetch_messages_with_token(self, channel_id: int, since_date: datetime) -> Tuple[str, datetime]:
+        """Fetch messages from Discord using the stored token.
+        
+        Args:
+            channel_id: Discord channel ID
+            since_date: Date to start fetching messages from
+            
+        Returns:
+            tuple: (formatted_history, first_message_date)
+        """
+        if not self.token:
+            raise ValueError("Discord token is required for fetch_messages_with_token")
+        
+        bot = self.create_bot()
+        
+        @bot.event
+        async def on_ready():
+            try:
+                # Fetch messages from Discord
+                chat_history, first_message_date = await self.fetch_messages(
+                    bot, channel_id, since_date
+                )
+                # Store results for retrieval
+                bot._chat_results = (chat_history, first_message_date)
+            except Exception as e:
+                bot._chat_results = ("", since_date)
+                bot._chat_error = e
+            finally:
+                await bot.close()
+        
+        async with bot:
+            await bot.start(self.token)
+            
+        # Check for errors
+        if hasattr(bot, '_chat_error'):
+            raise bot._chat_error
+            
+        return getattr(bot, '_chat_results', ("", since_date))

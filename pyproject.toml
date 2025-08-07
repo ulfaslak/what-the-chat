@@ -1,10 +1,36 @@
 [project]
-authors = [{name = "pymc-labs", email = "info@pymc-labs.com"}]
-dependencies = []
+authors = [{name = "ulfaslak", email = "ulfaslak@gmail.com"}]
+dependencies = [
+    "langchain-core",
+    "langchain-community>=0.0.13", 
+    "langchain-openai>=0.0.5",
+    "discord.py>=2.3.2",
+    "slack-sdk>=3.26.1",
+    "colorama>=0.4.6",
+]
 description = "What the Chat allows you to summarize and chat with chat history from Discord and Slack."
 name = "what_the_chat"
-requires-python = ">= 3.11"
-version = "0.1.0"
+requires-python = ">= 3.10"
+version = "0.2.0"
+readme = "README.md"
+license = {text = "MIT"}
+keywords = ["discord", "slack", "chat", "summarization", "llm", "ai"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Communications :: Chat",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://github.com/ulfaslak/what-the-chat"
+Repository = "https://github.com/ulfaslak/what-the-chat"
+Issues = "https://github.com/ulfaslak/what-the-chat/issues"
 
 [project.optional-dependencies]
 test = ["pytest"]

@@ -40,6 +40,21 @@ async def fetch_discord_messages(bot, channel_id: int, since_date: datetime) -> 
     return await platform.fetch_messages(bot, channel_id, since_date)
 
 
+async def fetch_discord_messages_with_token(token: str, channel_id: int, since_date: datetime) -> Tuple[str, datetime]:
+    """Fetch messages from a Discord channel using a token.
+    
+    Args:
+        token: Discord bot token
+        channel_id: Discord channel ID  
+        since_date: Date to start fetching messages from
+
+    Returns:
+        tuple: (formatted_history, first_message_date)
+    """
+    platform = DiscordPlatform(token)
+    return await platform.fetch_messages_with_token(channel_id, since_date)
+
+
 def fetch_slack_messages(slack_token: str, channel_name: str, since_date: datetime) -> Tuple[str, datetime]:
     """Fetch messages from a Slack channel.
     
@@ -53,6 +68,21 @@ def fetch_slack_messages(slack_token: str, channel_name: str, since_date: dateti
     """
     platform = SlackPlatform()
     return platform.fetch_messages(slack_token, channel_name, since_date)
+
+
+def fetch_slack_messages_with_token(token: str, channel_name: str, since_date: datetime) -> Tuple[str, datetime]:
+    """Fetch messages from a Slack channel using a stored token.
+    
+    Args:
+        token: Slack API token
+        channel_name: Slack channel name
+        since_date: Date to start fetching messages from
+
+    Returns:
+        tuple: (formatted_history, first_message_date)
+    """
+    platform = SlackPlatform(token)
+    return platform.fetch_messages_with_token(channel_name, since_date)
 
 
 def standardize_user_references(chat_history: str, user_mapping: Dict[str, str] = None) -> str:
@@ -81,7 +111,7 @@ def replace_user_ids_with_names(text: str, user_mapping: Dict[str, str] = None) 
     return _replace_user_ids_with_names(text, user_mapping or {})
 
 
-def generate_summary(chat_history: str, model_source: str, model: str, user_mapping: Dict[str, str] = None) -> str:
+def generate_summary(chat_history: str, model_source: str, model: str, user_mapping: Dict[str, str] = None, api_key: str = None) -> str:
     """Generate a summary of the chat history.
     
     Args:
@@ -89,30 +119,32 @@ def generate_summary(chat_history: str, model_source: str, model: str, user_mapp
         model_source: "local" or "remote"
         model: Model name to use
         user_mapping: Optional user mapping for ID replacement
+        api_key: API key for remote models (required if model_source is "remote")
         
     Returns:
         Generated summary text
     """
-    service = SummarizationService(model_source, model)
+    service = SummarizationService(model_source, model, api_key)
     return service.generate_summary(chat_history, user_mapping)
 
 
-def create_chat_chain(chat_history: str, model_source: str, model: str):
+def create_chat_chain(chat_history: str, model_source: str, model: str, api_key: str = None):
     """Create a chat chain for interactive chat.
     
     Args:
         chat_history: Formatted chat history for context
         model_source: "local" or "remote"
         model: Model name to use
+        api_key: API key for remote models (required if model_source is "remote")
         
     Returns:
         Configured chat chain
     """
-    service = ChatService(model_source, model)
+    service = ChatService(model_source, model, api_key)
     return service.create_chat_chain(chat_history)
 
 
-def interactive_chat_session(chat_history: str, model_source: str, model: str, user_mapping: Dict[str, str] = None):
+def interactive_chat_session(chat_history: str, model_source: str, model: str, user_mapping: Dict[str, str] = None, api_key: str = None):
     """Start an interactive chat session.
     
     Args:
@@ -120,8 +152,9 @@ def interactive_chat_session(chat_history: str, model_source: str, model: str, u
         model_source: "local" or "remote"
         model: Model name to use
         user_mapping: Optional user mapping for ID replacement
+        api_key: API key for remote models (required if model_source is "remote")
     """
-    service = ChatService(model_source, model)
+    service = ChatService(model_source, model, api_key)
     service.start_interactive_session(chat_history, user_mapping)
 
 
@@ -137,40 +170,56 @@ def create_discord_bot():
 
 # Factory functions for platform instances
 
-def get_discord_platform() -> DiscordPlatform:
-    """Get a Discord platform instance."""
-    return DiscordPlatform()
+def get_discord_platform(token: str = None) -> DiscordPlatform:
+    """Get a Discord platform instance.
+    
+    Args:
+        token: Discord bot token (optional)
+        
+    Returns:
+        Configured Discord platform
+    """
+    return DiscordPlatform(token)
 
 
-def get_slack_platform() -> SlackPlatform:
-    """Get a Slack platform instance."""
-    return SlackPlatform()
+def get_slack_platform(token: str = None) -> SlackPlatform:
+    """Get a Slack platform instance.
+    
+    Args:
+        token: Slack API token (optional)
+        
+    Returns:
+        Configured Slack platform
+    """
+    return SlackPlatform(token)
 
 
-def get_summarization_service(model_source: str = "local", model: str = "deepseek-r1-distill-qwen-7b") -> SummarizationService:
+def get_summarization_service(model_source: str = "local", model: str = "deepseek-r1-distill-qwen-7b", api_key: str = None) -> SummarizationService:
     """Get a summarization service instance.
     
     Args:
         model_source: "local" or "remote"
         model: Model name to use
+        api_key: API key for remote models (required if model_source is "remote")
         
     Returns:
         Configured summarization service
     """
-    return SummarizationService(model_source, model)
+    return SummarizationService(model_source, model, api_key)
 
 
-def get_chat_service(model_source: str = "local", model: str = "deepseek-r1-distill-qwen-7b") -> ChatService:
+def get_chat_service(model_source: str = "local", model: str = "deepseek-r1-distill-qwen-7b", api_key: str = None) -> ChatService:
     """Get a chat service instance.
     
     Args:
         model_source: "local" or "remote" 
         model: Model name to use
+        api_key: API key for remote models (required if model_source is "remote")
         
     Returns:
         Configured chat service
     """
-    return ChatService(model_source, model)
+    return ChatService(model_source, model, api_key)
 
 
 # Export all the main classes for direct usage
@@ -182,7 +231,8 @@ __all__ = [
     # Model classes
     "ChatMessage", "ChatHistory",
     # Compatibility functions
-    "fetch_discord_messages", "fetch_slack_messages",
+    "fetch_discord_messages", "fetch_discord_messages_with_token",
+    "fetch_slack_messages", "fetch_slack_messages_with_token",
     "standardize_user_references", "replace_user_ids_with_names",
     "generate_summary", "create_chat_chain", "interactive_chat_session",
     "create_discord_bot",

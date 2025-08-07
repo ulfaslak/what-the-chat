@@ -8872,11 +8872,17 @@ packages:
   timestamp: 1733157432924
 - pypi: ./
   name: what-the-chat
-  version: 0.1.0
-  sha256: 4c2542386474868b8b14ecd5e8058e636625f19efc532bc48fcd60eb5f524220
+  version: 0.2.0
+  sha256: 26c9eb0e0626cd35da10233748582d5abe9c42df066a7c7f3196d4c61791afa4
   requires_dist:
+  - langchain-core
+  - langchain-community>=0.0.13
+  - langchain-openai>=0.0.5
+  - discord-py>=2.3.2
+  - slack-sdk>=3.26.1
+  - colorama>=0.4.6
   - pytest ; extra == 'test'
-  requires_python: '>=3.11'
+  requires_python: '>=3.10'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/linux-64/xcb-util-0.4.1-h4f16b4b_2.conda
   sha256: ad8cab7e07e2af268449c2ce855cbb51f43f4664936eff679b1f3862e6e4b01d

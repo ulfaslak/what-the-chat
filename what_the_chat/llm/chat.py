@@ -14,15 +14,17 @@ from colorama import Fore, Style
 class ChatService:
     """Service for interactive chat with chat history using LLMs."""
     
-    def __init__(self, model_source: str = "local", model: str = "deepseek-r1-distill-qwen-7b"):
+    def __init__(self, model_source: str = "local", model: str = "deepseek-r1-distill-qwen-7b", api_key: str = None):
         """Initialize the chat service.
         
         Args:
             model_source: "local" for Ollama or "remote" for OpenAI
             model: Model name to use
+            api_key: API key for remote models (required if model_source is "remote")
         """
         self.model_source = model_source
         self.model = model
+        self.api_key = api_key
         self._llm = None
         self._chain = None
     
@@ -30,7 +32,9 @@ class ChatService:
         """Get or create the LLM instance."""
         if self._llm is None:
             if self.model_source == "remote":
-                self._llm = ChatOpenAI(model=self.model, temperature=0.7)
+                if not self.api_key:
+                    raise ValueError("API key is required for remote models")
+                self._llm = ChatOpenAI(model=self.model, temperature=0.7, api_key=self.api_key)
             else:  # local model
                 print(f"    {Fore.YELLOW}Using local model: {self.model}{Style.RESET_ALL}")
                 self._llm = Ollama(model=self.model)
@@ -158,7 +162,7 @@ When answering questions:
                 # Check for summary command
                 if user_input.lower() == "summary":
                     print(f"\n{Fore.CYAN}→ Generating summary...{Style.RESET_ALL}")
-                    summarizer = SummarizationService(self.model_source, self.model)
+                    summarizer = SummarizationService(self.model_source, self.model, self.api_key)
                     summary = summarizer.generate_summary(chat_history, user_mapping)
                     processed_summary = replace_user_ids_with_names(summary, user_mapping or {})
                     print(f"\n{Fore.CYAN}→ Summary:{Style.RESET_ALL}")
