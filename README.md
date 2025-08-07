@@ -31,23 +31,29 @@ This package provides:
 - **Colorful Terminal Output**: Provides clear visual cues with color-coded output and action indicators
 - **Modular Architecture**: Clean separation of platform integrations, LLM services, and utilities for easy extension
 
-## Installation
+## Usage
 
+I originally created this package for my own use, and would run it as a CLI application. This is
+still the simplest use case, but I have recently refactored it so that it imports into other
+projects as a python package.
+
+### Running the CLI Application
 1. Clone this repository:
    ```
    git clone https://github.com/yourusername/what-the-chat.git
    cd what-the-chat
    ```
 
-2. Install dependencies using pixi (recommended):
-   ```
+2. Install the package:
+
+   **Option A: Using pixi (recommended):**
+   ```bash
    pixi install
    ```
    
-   Or create a virtual environment and install manually:
-   ```
-   python -m venv env
-   source env/bin/activate
+   **Option B: Using pip:**
+   ```bash
+   # Install from source
    pip install -e .
    ```
 
@@ -58,24 +64,33 @@ This package provides:
    OPENAI_API_KEY=your_openai_api_key  # Only needed if using remote models
    ```
 
-## Usage
+### Importing as a package
+You can install the main logic as a package into your own project with pip:
+
+```bash
+pip install git+https://github.com/ulfaslak/what-the-chat.git
+```
+
+## Usage examples
 
 ### CLI Application
+
+#### Basic usage
 
 To fetch chat history from a Discord channel for the last 30 days, generate a summary, and start an interactive chat session:
 
 ```bash
-# Using pixi (recommended)
+# Using pixi
 pixi run python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 --chat
 
-# Or if installed in your environment
+# Or running the script directly
 python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 --chat
 ```
 
 To fetch chat history from a Slack channel:
 
 ```bash
-pixi run python scripts/launch_cli.py --since-days 30 --platform slack --channel general --chat
+python scripts/launch_cli.py --since-days 30 --platform slack --channel general --chat
 ```
 
 This will:
@@ -83,53 +98,64 @@ This will:
 2. Generate a summary of the chat history
 3. Start an interactive chat session where you can ask questions about the chat history
 
-### Saving to Files
+#### Saving to Files
 
 To save the summary and/or full chat history to files:
 
 ```bash
-pixi run python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 --dump-file ./output --dump-collected-chat-history
+python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 --dump-file ./output --dump-collected-chat-history
 ```
 
 This will save:
 1. The summary to a file named `discord_history_summary_[channel_name]_[first_message_date]_[today's_date].md` in the `./output` directory
 2. The full chat history to a file named `discord_history_[channel_name]_[first_message_date]_[today's_date].md` in the `./output` directory
 
-For Slack:
-```bash
-pixi run python scripts/launch_cli.py --since-days 30 --platform slack --channel general --dump-file ./output --dump-collected-chat-history
-```
-
-### Using Remote Models
+#### Using Remote Models
 
 To use a remote model (e.g., GPT-4) instead of the default local model:
 
 ```bash
-pixi run python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 --model-source remote --model gpt-4o
+python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 --model-source remote --model gpt-4o
 ```
 
-### Using as a Python Package
+### Using as a Python Package in your own project
 
 You can also use What The Chat programmatically in your own applications:
 
 ```python
-from what_the_chat import DiscordPlatform, SummarizationService, ChatService
+import os
+from datetime import datetime, timedelta
+from what_the_chat import DiscordPlatform, SlackPlatform, SummarizationService, ChatService
 
-# Create platform instance
-discord = DiscordPlatform()
-bot = discord.create_bot()
+# Get tokens and API keys explicitly
+discord_token = os.getenv("DISCORD_TOKEN")  # or however you manage secrets
+slack_token = os.getenv("SLACK_TOKEN")
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
-# Fetch messages (in an async context)
-chat_history, first_date = await discord.fetch_messages(bot, channel_id, since_date)
+# Discord example with explicit token
+discord = DiscordPlatform(discord_token)
+since_date = datetime.now() - timedelta(days=7)
+
+# Fetch Discord messages (in an async context)
+chat_history, first_date = await discord.fetch_messages_with_token(channel_id, since_date)
 user_mapping = discord.get_user_mapping()
 
-# Generate summary
-summarizer = SummarizationService(model_source="remote", model="gpt-4o")
+# Or Slack example with explicit token
+slack = SlackPlatform(slack_token)
+chat_history, first_date = slack.fetch_messages_with_token("general", since_date)
+user_mapping = slack.get_user_mapping()
+
+# Generate summary with explicit API key
+summarizer = SummarizationService(model_source="remote", model="gpt-4o", api_key=openai_api_key)
 summary = summarizer.generate_summary(chat_history, user_mapping)
 
-# Start interactive chat
-chat_service = ChatService(model_source="remote", model="gpt-4o")
+# Start interactive chat with explicit API key
+chat_service = ChatService(model_source="remote", model="gpt-4o", api_key=openai_api_key)
 chat_service.start_interactive_session(chat_history, user_mapping)
+
+# For local models, no API key needed
+local_summarizer = SummarizationService(model_source="local", model="deepseek-r1-distill-qwen-7b")
+local_summary = local_summarizer.generate_summary(chat_history, user_mapping)
 ```
 
 ## Command Line Arguments
@@ -175,14 +201,14 @@ scripts/
 
 ## Requirements
 
-- Python 3.11+
-- discord.py
-- slack-sdk
-- langchain-core
-- langchain-openai
-- langchain-community
-- python-dotenv
-- colorama
+### Core Dependencies
+- Python 3.10+
+- discord.py (for Discord integration)
+- slack-sdk (for Slack integration)
+- langchain-core (for LLM functionality)
+- langchain-openai (for OpenAI models)
+- langchain-community (for Ollama and other local models)
+- colorama (for colored output)
 
 ## Discord Bot Setup
 

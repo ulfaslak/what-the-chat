@@ -11,7 +11,13 @@ from slack_sdk.errors import SlackApiError
 class SlackPlatform:
     """Slack platform integration for message fetching."""
     
-    def __init__(self):
+    def __init__(self, token: str = None):
+        """Initialize the Slack platform.
+        
+        Args:
+            token: Slack API token (optional, can be passed to fetch_messages instead)
+        """
+        self.token = token
         self.user_mapping: Dict[str, str] = {}
     
     def fetch_messages(
@@ -240,3 +246,18 @@ class SlackPlatform:
     def get_user_mapping(self) -> Dict[str, str]:
         """Get the current user mapping dictionary."""
         return self.user_mapping.copy()
+    
+    def fetch_messages_with_token(self, channel_name: str, since_date: datetime) -> Tuple[str, datetime]:
+        """Fetch messages from Slack using the stored token.
+        
+        Args:
+            channel_name: Slack channel name
+            since_date: Date to start fetching messages from
+            
+        Returns:
+            tuple: (formatted_history, first_message_date)
+        """
+        if not self.token:
+            raise ValueError("Slack token is required for fetch_messages_with_token")
+        
+        return self.fetch_messages(self.token, channel_name, since_date)

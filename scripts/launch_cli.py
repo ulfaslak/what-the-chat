@@ -175,8 +175,8 @@ def save_files(
 
 async def process_discord_channel(args, discord_token, channel_id, since_date):
     """Process a Discord channel."""
-    # Create Discord platform and bot
-    platform = DiscordPlatform()
+    # Create Discord platform with token
+    platform = DiscordPlatform(discord_token)
     bot = platform.create_bot()
 
     @bot.event
@@ -227,12 +227,12 @@ async def process_discord_channel(args, discord_token, channel_id, since_date):
 async def process_slack_channel(args, slack_token, channel_name, since_date):
     """Process a Slack channel."""
     try:
-        # Create Slack platform
-        platform = SlackPlatform()
+        # Create Slack platform with token
+        platform = SlackPlatform(slack_token)
         
         # Fetch messages from Slack
-        chat_history, first_message_date = platform.fetch_messages(
-            slack_token, channel_name, since_date
+        chat_history, first_message_date = platform.fetch_messages_with_token(
+            channel_name, since_date
         )
 
         if not chat_history:
@@ -265,8 +265,16 @@ async def process_messages(
     today = datetime.now().strftime("%Y-%m-%d")
     first_date_str = first_message_date.strftime("%Y-%m-%d")
 
+    # Get API key if using remote models
+    api_key = None
+    if args.model_source == "remote":
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            print(f"{Fore.RED}Error: OPENAI_API_KEY environment variable is required for remote models{Style.RESET_ALL}")
+            return
+
     # Generate summary
-    summarizer = SummarizationService(args.model_source, args.model)
+    summarizer = SummarizationService(args.model_source, args.model, api_key)
     summary = summarizer.generate_summary(standardized_history, user_mapping)
 
     # Post-process the summary to replace user IDs with usernames
@@ -286,7 +294,7 @@ async def process_messages(
     # Start interactive chat session if requested
     if args.chat:
         try:
-            chat_service = ChatService(args.model_source, args.model)
+            chat_service = ChatService(args.model_source, args.model, api_key)
             chat_service.start_interactive_session(standardized_history, user_mapping)
         except KeyboardInterrupt:
             print(f"\n{Fore.CYAN}→ Chat session interrupted...{Style.RESET_ALL}")

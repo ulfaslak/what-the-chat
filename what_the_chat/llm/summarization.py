@@ -11,22 +11,26 @@ from colorama import Fore, Style
 class SummarizationService:
     """Service for generating summaries of chat history using LLMs."""
     
-    def __init__(self, model_source: str = "local", model: str = "deepseek-r1-distill-qwen-7b"):
+    def __init__(self, model_source: str = "local", model: str = "deepseek-r1-distill-qwen-7b", api_key: str = None):
         """Initialize the summarization service.
         
         Args:
             model_source: "local" for Ollama or "remote" for OpenAI
             model: Model name to use
+            api_key: API key for remote models (required if model_source is "remote")
         """
         self.model_source = model_source
         self.model = model
+        self.api_key = api_key
         self._llm = None
     
     def _get_llm(self):
         """Get or create the LLM instance."""
         if self._llm is None:
             if self.model_source == "remote":
-                self._llm = ChatOpenAI(model=self.model, temperature=0)
+                if not self.api_key:
+                    raise ValueError("API key is required for remote models")
+                self._llm = ChatOpenAI(model=self.model, temperature=0, api_key=self.api_key)
             else:  # local model
                 print(f"    {Fore.YELLOW}Using local model: {self.model}{Style.RESET_ALL}")
                 self._llm = Ollama(model=self.model)
