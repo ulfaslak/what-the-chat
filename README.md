@@ -190,13 +190,13 @@ local_summary = local_summarizer.generate_summary(chat_history, user_mapping)
 | Argument | Description | Required | Default |
 |----------|-------------|----------|---------|
 | `--since-days` | 📅 Number of days to look back | ✅ | - |
-| `--platform` | 🔗 Platform (discord/slack) | ❌ | discord |
+| `--platform` | 🔗 Platform (discord/slack) | - | discord |
 | `--channel` | 📺 Channel ID or name | ✅ | - |
-| `--model-source` | 🧠 Model source (local/remote) | ❌ | local |
-| `--model` | 🤖 Specific model name | ❌ | deepseek-r1-distill-qwen-7b |
-| `--dump-file` | 💾 Save summary to file | ❌ | - |
-| `--dump-collected-chat-history` | 📄 Save full chat history | ❌ | false |
-| `--chat` | 💬 Start interactive chat | ❌ | false |
+| `--model-source` | 🧠 Model source (local/remote) | - | local |
+| `--model` | 🤖 Specific model name | - | deepseek-r1-distill-qwen-7b |
+| `--dump-file` | 💾 Save summary to file | - | - |
+| `--dump-collected-chat-history` | 📄 Save full chat history | - | false |
+| `--chat` | 💬 Start interactive chat | - | false |
 
 ## 💬 Interactive Chat Commands
 
