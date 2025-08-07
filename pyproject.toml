@@ -69,5 +69,10 @@ default = { features = [], solve-group = "default" }
 test = { features = ["test"], solve-group = "default" }
 minimal = { features = ["test"], solve-group = "default" }
 
+[tool.pixi.feature.test.dependencies]
+pytest = "*"
+pytest-asyncio = "*"
+pytest-cov = "*"
+
 [tool.pixi.feature.test.tasks]
 test = "pytest"

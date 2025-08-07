@@ -259,10 +259,11 @@ pixi run -e test pytest tests/test_models.py -v
 ```
 
 ### **Automated Testing**
-- ✅ **GitHub Actions CI** - Tests on Python 3.10, 3.11, and 3.12
+- ✅ **GitHub Actions CI** - Tests on Python 3.10, 3.11, and 3.12 using **pixi**
 - ✅ **Test Coverage** - Reports sent to Codecov  
-- ✅ **Package Installation** - Verifies pip installation works
+- ✅ **Package Installation** - Verifies pixi installation and imports work
 - ✅ **Import Validation** - Ensures all classes import correctly
+- ✅ **Dependency Caching** - Fast CI with pixi environment caching
 
 **Status badges** in the header show real-time build and coverage status!
 
