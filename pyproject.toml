@@ -1,0 +1,47 @@
+[project]
+authors = [{name = "pymc-labs", email = "info@pymc-labs.com"}]
+dependencies = []
+description = "What the Chat allows you to summarize and chat with chat history from Discord and Slack."
+name = "what_the_chat"
+requires-python = ">= 3.11"
+version = "0.1.0"
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[tool.pixi.project]
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "linux-64", "osx-64"]
+
+[tool.pixi.pypi-dependencies]
+what_the_chat = { path = ".", editable = true }
+smolagents = "*"
+
+[tool.pixi.dependencies]
+jupyterlab = "*"
+numpy = "*"
+pandas = "*"
+matplotlib = "*"
+scikit-learn = "*"
+langchain-core = "*"
+langchain-community = ">=0.0.13"
+langchain-openai = ">=0.0.5"
+langchain-anthropic = "*"
+langgraph = "*"
+tenacity = "*"
+"discord.py" = ">=2.3.2"
+python-dotenv = ">=1.0.0"
+colorama = ">=0.4.6"
+slack-sdk = ">=3.26.1"
+
+[tool.pixi.environments]
+default = { features = [], solve-group = "default" }
+test = { features = ["test"], solve-group = "default" }
+minimal = { features = ["test"], solve-group = "default" }
+
+[tool.pixi.feature.test.tasks]
+test = "pytest"

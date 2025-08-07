@@ -1,17 +1,18 @@
 # What The Chat
 
-A Python tool for fetching and summarizing chat history from Discord or Slack channels.
+A modular Python package for fetching and summarizing chat history from Discord or Slack channels.
 
 https://github.com/user-attachments/assets/efc9d54e-eff4-4528-b7dd-43994660e96d
 
 ## Overview
 
-This tool allows you to:
+This package provides:
 - Fetch all messages from a Discord or Slack channel since a specified date
 - Include messages from threads within the channel
 - Generate a structured summary of the chat history using either local or remote LLMs
 - Save both the full chat history and the summary to text files
 - Interact with the chat history through an interactive chat session
+- Modular architecture supporting CLI, web apps, Discord bots, and Slack bots
 
 ## Features
 
@@ -28,6 +29,7 @@ This tool allows you to:
 - **Model Flexibility**: Supports both local models (via Ollama) and remote models (via OpenAI)
 - **Interactive Chat**: Allows users to ask questions about the chat history in an interactive session
 - **Colorful Terminal Output**: Provides clear visual cues with color-coded output and action indicators
+- **Modular Architecture**: Clean separation of platform integrations, LLM services, and utilities for easy extension
 
 ## Installation
 
@@ -37,11 +39,16 @@ This tool allows you to:
    cd what-the-chat
    ```
 
-2. Install the required dependencies (e.g. in a new environment):
+2. Install dependencies using pixi (recommended):
+   ```
+   pixi install
+   ```
+   
+   Or create a virtual environment and install manually:
    ```
    python -m venv env
    source env/bin/activate
-   pip install -r requirements.txt
+   pip install -e .
    ```
 
 3. Create a `.env` file in the root directory with the following variables:
@@ -53,18 +60,22 @@ This tool allows you to:
 
 ## Usage
 
-### Basic Usage
+### CLI Application
 
 To fetch chat history from a Discord channel for the last 30 days, generate a summary, and start an interactive chat session:
 
-```
-python summarize.py --since-days 30 --channel 123456789012345678 --chat
+```bash
+# Using pixi (recommended)
+pixi run python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 --chat
+
+# Or if installed in your environment
+python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 --chat
 ```
 
 To fetch chat history from a Slack channel:
 
-```
-python summarize.py --since-days 30 --platform slack --channel general --chat
+```bash
+pixi run python scripts/launch_cli.py --since-days 30 --platform slack --channel general --chat
 ```
 
 This will:
@@ -76,8 +87,8 @@ This will:
 
 To save the summary and/or full chat history to files:
 
-```
-python summarize.py --since-days 30 --channel 123456789012345678 --dump-file ./output --dump-collected-chat-history
+```bash
+pixi run python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 --dump-file ./output --dump-collected-chat-history
 ```
 
 This will save:
@@ -85,20 +96,40 @@ This will save:
 2. The full chat history to a file named `discord_history_[channel_name]_[first_message_date]_[today's_date].md` in the `./output` directory
 
 For Slack:
+```bash
+pixi run python scripts/launch_cli.py --since-days 30 --platform slack --channel general --dump-file ./output --dump-collected-chat-history
 ```
-python summarize.py --since-days 30 --platform slack --channel general --dump-file ./output --dump-collected-chat-history
-```
-
-This will save:
-1. The summary to a file named `slack_history_summary_[channel_name]_[first_message_date]_[today's_date].md` in the `./output` directory
-2. The full chat history to a file named `slack_history_[channel_name]_[first_message_date]_[today's_date].md` in the `./output` directory
 
 ### Using Remote Models
 
-To use a remote model (e.g., GPT-4 Turbo) instead of the default local model:
+To use a remote model (e.g., GPT-4) instead of the default local model:
 
+```bash
+pixi run python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 --model-source remote --model gpt-4o
 ```
-python summarize.py --since-days 30 --channel 123456789012345678 --model-source remote --model gpt-4-turbo
+
+### Using as a Python Package
+
+You can also use What The Chat programmatically in your own applications:
+
+```python
+from what_the_chat import DiscordPlatform, SummarizationService, ChatService
+
+# Create platform instance
+discord = DiscordPlatform()
+bot = discord.create_bot()
+
+# Fetch messages (in an async context)
+chat_history, first_date = await discord.fetch_messages(bot, channel_id, since_date)
+user_mapping = discord.get_user_mapping()
+
+# Generate summary
+summarizer = SummarizationService(model_source="remote", model="gpt-4o")
+summary = summarizer.generate_summary(chat_history, user_mapping)
+
+# Start interactive chat
+chat_service = ChatService(model_source="remote", model="gpt-4o")
+chat_service.start_interactive_session(chat_history, user_mapping)
 ```
 
 ## Command Line Arguments
@@ -107,7 +138,7 @@ python summarize.py --since-days 30 --channel 123456789012345678 --model-source 
 - `--platform`: Platform to fetch messages from (choices: "discord", "slack", default: "discord")
 - `--channel`: Channel ID (Discord) or Channel name (Slack) (required)
 - `--model-source`: Source of the model to use for summarization (choices: "local", "remote", default: "local")
-- `--model`: Name of the model to use (default: "deepseek-r1-distill-qwen-7b" for local, "gpt-4-turbo" for remote)
+- `--model`: Name of the model to use (default: "deepseek-r1-distill-qwen-7b" for local, "gpt-4o" for remote)
 - `--dump-file`: Optional: Save summary to a markdown file. If no path is provided, saves to current directory.
 - `--dump-collected-chat-history`: Optional: Save the collected chat history to a file alongside the summary
 - `--chat`: Optional: Start an interactive chat session with the collected conversation history
@@ -117,16 +148,37 @@ python summarize.py --since-days 30 --channel 123456789012345678 --model-source 
 When in the interactive chat session, the following commands are available:
 
 - `help`: Show available commands
-- `exit`, `quit`, or `q`: End the chat session
+- `exit`, `quit`, or `q`: End the chat session gracefully
 - `summary`: Generate a summary of the chat history
 - `users`: List all users mentioned in the chat history
+- `Ctrl+C`: Interrupt and exit gracefully
+
+## Package Structure
+
+```
+what_the_chat/
+├── __init__.py              # Main package exports
+├── summarize.py             # High-level API & compatibility layer
+├── platforms/               # Platform integrations
+│   ├── discord.py          # Discord platform class
+│   └── slack.py            # Slack platform class
+├── llm/                    # LLM services
+│   ├── summarization.py    # Summary generation service
+│   └── chat.py             # Interactive chat service
+├── utils/                  # Utilities
+│   └── formatting.py       # Text processing utilities
+└── models/                 # Data models
+    └── message.py          # Message and ChatHistory classes
+scripts/
+└── launch_cli.py           # CLI application entry point
+```
 
 ## Requirements
 
-- Python 3.8+
+- Python 3.11+
 - discord.py
 - slack-sdk
-- langchain
+- langchain-core
 - langchain-openai
 - langchain-community
 - python-dotenv
