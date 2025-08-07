@@ -1,240 +1,398 @@
-# What The Chat
+# 💬 What The Chat
 
-A modular Python package for fetching and summarizing chat history from Discord or Slack channels.
+> 🚀 **A powerful, modular Python package for fetching and summarizing chat history from Discord or Slack channels with AI-powered insights!**
 
-https://github.com/user-attachments/assets/efc9d54e-eff4-4528-b7dd-43994660e96d
+<div align="center">
 
-## Overview
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![Discord](https://img.shields.io/badge/Discord-7289DA?logo=discord&logoColor=white)](https://discord.com/)
+[![Slack](https://img.shields.io/badge/Slack-4A154B?logo=slack&logoColor=white)](https://slack.com/)
 
-This package provides:
-- Fetch all messages from a Discord or Slack channel since a specified date
-- Include messages from threads within the channel
-- Generate a structured summary of the chat history using either local or remote LLMs
-- Save both the full chat history and the summary to text files
-- Interact with the chat history through an interactive chat session
-- Modular architecture supporting CLI, web apps, Discord bots, and Slack bots
+</div>
 
-## Features
+---
 
-- **Multi-Platform Support**: Works with both Discord and Slack channels
-- **Comprehensive Message Collection**: Fetches all messages from a specified channel since a given date
-- **Thread Support**: Automatically collects messages from all threads within the channel
-- **User Reference Standardization**: Standardizes user references in the chat history
-- **Intelligent Summarization**: Generates a structured summary based on the time span of messages:
-  - Project Event Update (0-2 days)
-  - Periodical Digest (3-6 days)
-  - Full Project Status Summary (7+ days)
-- **User-Friendly Output**: Replaces user IDs with actual usernames in the summary for better readability
-- **Accurate Filenames**: Uses the actual first message date in filenames for accurate time range representation
-- **Model Flexibility**: Supports both local models (via Ollama) and remote models (via OpenAI)
-- **Interactive Chat**: Allows users to ask questions about the chat history in an interactive session
-- **Colorful Terminal Output**: Provides clear visual cues with color-coded output and action indicators
-- **Modular Architecture**: Clean separation of platform integrations, LLM services, and utilities for easy extension
+## 🌟 **Overview**
 
-## Usage
+Transform your Discord or Slack conversations into **actionable insights** with AI-powered summarization and interactive chat capabilities!
 
-I originally created this package for my own use, and would run it as a CLI application. This is
-still the simplest use case, but I have recently refactored it so that it imports into other
-projects as a python package.
+### ✨ **What it does:**
+- 📥 **Fetch** all messages from Discord/Slack channels since any date
+- 🧵 **Include** messages from threads within channels  
+- 🤖 **Generate** intelligent summaries using local or remote LLMs
+- 💾 **Save** both full chat history and summaries to files
+- 💭 **Chat** interactively with your conversation history
+- 🔧 **Extend** easily with modular architecture for web apps, bots, and more
 
-### Running the CLI Application
-1. Clone this repository:
-   ```
-   git clone https://github.com/yourusername/what-the-chat.git
-   cd what-the-chat
-   ```
+---
 
-2. Install the package:
+## 🎯 **Features**
 
-   **Option A: Using pixi (recommended):**
-   ```bash
-   pixi install
-   ```
-   
-   **Option B: Using pip:**
-   ```bash
-   # Install from source
-   pip install -e .
-   ```
+<table>
+<tr>
+<td width="50%">
 
-3. Create a `.env` file in the root directory with the following variables:
-   ```
-   DISCORD_TOKEN=your_discord_bot_token
-   SLACK_TOKEN=your_slack_bot_token
-   OPENAI_API_KEY=your_openai_api_key  # Only needed if using remote models
-   ```
+### 🌐 **Multi-Platform**
+- 🎮 **Discord** channel support
+- 💼 **Slack** workspace integration  
+- 🧵 **Thread** message collection
+- 👥 **User reference** standardization
 
-### Importing as a package
-You can install the main logic as a package into your own project with pip:
+</td>
+<td width="50%">
+
+### 🧠 **AI-Powered Insights**
+- 📊 **Smart summarization** based on timespan:
+  - ⚡ Project Event Update (0-2 days)
+  - 📝 Periodical Digest (3-6 days) 
+  - 📋 Full Project Status (7+ days)
+- 🤖 **Local models** (via Ollama)
+- ☁️ **Remote models** (via OpenAI)
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 💬 **Interactive Features**
+- 🗣️ **Chat** with your history
+- ❓ **Ask questions** about conversations
+- 🎨 **Colorful terminal** output
+- ⌨️ **Graceful exit** handling
+
+</td>
+<td width="50%">
+
+### 🔧 **Developer Friendly**
+- 📦 **Modular architecture**
+- 🐍 **Clean Python package**
+- 🔌 **Easy extension** for bots/web apps
+- 📚 **Comprehensive documentation**
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🚀 **Quick Start**
+
+### 📦 **Installation**
+
+<details>
+<summary>🔥 <strong>Option A: Using pixi (recommended)</strong></summary>
 
 ```bash
+git clone https://github.com/ulfaslak/what-the-chat.git
+cd what-the-chat
+pixi install
+```
+
+</details>
+
+<details>
+<summary>🐍 <strong>Option B: Using pip</strong></summary>
+
+```bash
+# From source
+git clone https://github.com/ulfaslak/what-the-chat.git
+cd what-the-chat
+pip install -e .
+
+# Or directly from GitHub
 pip install git+https://github.com/ulfaslak/what-the-chat.git
 ```
 
-## Usage examples
+</details>
 
-### CLI Application
+### ⚙️ **Configuration**
 
-#### Basic usage
-
-To fetch chat history from a Discord channel for the last 30 days, generate a summary, and start an interactive chat session:
+Create a `.env` file with your tokens:
 
 ```bash
-# Using pixi
-pixi run python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 --chat
+# 🎮 Discord (required for Discord channels)
+DISCORD_TOKEN=your_discord_bot_token
 
-# Or running the script directly
-python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 --chat
+# 💼 Slack (required for Slack channels)  
+SLACK_TOKEN=your_slack_bot_token
+
+# 🤖 OpenAI (only needed for remote models)
+OPENAI_API_KEY=your_openai_api_key
 ```
 
-To fetch chat history from a Slack channel:
+---
+
+## 💻 **Usage Examples**
+
+### 🎮 **Discord Channel Summarization**
 
 ```bash
-python scripts/launch_cli.py --since-days 30 --platform slack --channel general --chat
+# 📊 Get a 7-day summary with interactive chat
+python scripts/launch_cli.py --since-days 7 --channel 123456789012345678 --chat
+
+# 💾 Save everything to files
+python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 \
+  --dump-file ./output --dump-collected-chat-history
+
+# 🤖 Use GPT-4 for summarization
+python scripts/launch_cli.py --since-days 7 --channel 123456789012345678 \
+  --model-source remote --model gpt-4o --chat
 ```
 
-This will:
-1. Fetch messages from the specified channel for the last 30 days
-2. Generate a summary of the chat history
-3. Start an interactive chat session where you can ask questions about the chat history
-
-#### Saving to Files
-
-To save the summary and/or full chat history to files:
+### 💼 **Slack Channel Analysis**
 
 ```bash
-python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 --dump-file ./output --dump-collected-chat-history
+# 📈 Analyze your #general channel
+python scripts/launch_cli.py --since-days 14 --platform slack \
+  --channel general --chat
 ```
 
-This will save:
-1. The summary to a file named `discord_history_summary_[channel_name]_[first_message_date]_[today's_date].md` in the `./output` directory
-2. The full chat history to a file named `discord_history_[channel_name]_[first_message_date]_[today's_date].md` in the `./output` directory
+### 🐍 **Python Package Integration**
 
-#### Using Remote Models
-
-To use a remote model (e.g., GPT-4) instead of the default local model:
-
-```bash
-python scripts/launch_cli.py --since-days 30 --channel 123456789012345678 --model-source remote --model gpt-4o
-```
-
-### Using as a Python Package in your own project
-
-You can also use What The Chat programmatically in your own applications:
+<details>
+<summary>🔥 <strong>Click to see code example</strong></summary>
 
 ```python
 import os
 from datetime import datetime, timedelta
 from what_the_chat import DiscordPlatform, SlackPlatform, SummarizationService, ChatService
 
-# Get tokens and API keys explicitly
-discord_token = os.getenv("DISCORD_TOKEN")  # or however you manage secrets
-slack_token = os.getenv("SLACK_TOKEN")
+# 🔐 Get your tokens (manage however you prefer!)
+discord_token = os.getenv("DISCORD_TOKEN")
+slack_token = os.getenv("SLACK_TOKEN") 
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
-# Discord example with explicit token
+# 🎮 Discord example
 discord = DiscordPlatform(discord_token)
 since_date = datetime.now() - timedelta(days=7)
 
-# Fetch Discord messages (in an async context)
+# 📥 Fetch messages
 chat_history, first_date = await discord.fetch_messages_with_token(channel_id, since_date)
 user_mapping = discord.get_user_mapping()
 
-# Or Slack example with explicit token
+# 💼 Or use Slack
 slack = SlackPlatform(slack_token)
 chat_history, first_date = slack.fetch_messages_with_token("general", since_date)
-user_mapping = slack.get_user_mapping()
 
-# Generate summary with explicit API key
-summarizer = SummarizationService(model_source="remote", model="gpt-4o", api_key=openai_api_key)
+# 🤖 Generate AI summary
+summarizer = SummarizationService("remote", "gpt-4o", api_key=openai_api_key)
 summary = summarizer.generate_summary(chat_history, user_mapping)
 
-# Start interactive chat with explicit API key
-chat_service = ChatService(model_source="remote", model="gpt-4o", api_key=openai_api_key)
+# 💬 Interactive chat with your history
+chat_service = ChatService("remote", "gpt-4o", api_key=openai_api_key)
 chat_service.start_interactive_session(chat_history, user_mapping)
 
-# For local models, no API key needed
-local_summarizer = SummarizationService(model_source="local", model="deepseek-r1-distill-qwen-7b")
-local_summary = local_summarizer.generate_summary(chat_history, user_mapping)
+# 🏠 For local models (no API key needed!)
+local_summarizer = SummarizationService("local", "deepseek-r1-distill-qwen-7b")
+summary = local_summarizer.generate_summary(chat_history, user_mapping)
 ```
 
-## Command Line Arguments
+</details>
 
-- `--since-days`: Number of days to look back from today (required)
-- `--platform`: Platform to fetch messages from (choices: "discord", "slack", default: "discord")
-- `--channel`: Channel ID (Discord) or Channel name (Slack) (required)
-- `--model-source`: Source of the model to use for summarization (choices: "local", "remote", default: "local")
-- `--model`: Name of the model to use (default: "deepseek-r1-distill-qwen-7b" for local, "gpt-4o" for remote)
-- `--dump-file`: Optional: Save summary to a markdown file. If no path is provided, saves to current directory.
-- `--dump-collected-chat-history`: Optional: Save the collected chat history to a file alongside the summary
-- `--chat`: Optional: Start an interactive chat session with the collected conversation history
+---
 
-## Interactive Chat Commands
+## 🛠️ **Extensibility**
 
-When in the interactive chat session, the following commands are available:
+Build amazing things with the modular architecture! 
 
-- `help`: Show available commands
-- `exit`, `quit`, or `q`: End the chat session gracefully
-- `summary`: Generate a summary of the chat history
-- `users`: List all users mentioned in the chat history
-- `Ctrl+C`: Interrupt and exit gracefully
+<details>
+<summary>🌐 <strong>Web Application Example</strong></summary>
 
-## Package Structure
+```python
+from what_the_chat import DiscordPlatform, SummarizationService
+from flask import Flask, request, jsonify
 
-```
-what_the_chat/
-├── __init__.py              # Main package exports
-├── summarize.py             # High-level API & compatibility layer
-├── platforms/               # Platform integrations
-│   ├── discord.py          # Discord platform class
-│   └── slack.py            # Slack platform class
-├── llm/                    # LLM services
-│   ├── summarization.py    # Summary generation service
-│   └── chat.py             # Interactive chat service
-├── utils/                  # Utilities
-│   └── formatting.py       # Text processing utilities
-└── models/                 # Data models
-    └── message.py          # Message and ChatHistory classes
-scripts/
-└── launch_cli.py           # CLI application entry point
+app = Flask(__name__)
+
+@app.route('/summarize', methods=['POST'])
+def summarize_endpoint():
+    discord_token = request.json['discord_token']
+    channel_id = request.json['channel_id']
+    
+    # 🚀 Use the same core components!
+    platform = DiscordPlatform(discord_token)
+    summarizer = SummarizationService("remote", "gpt-4o", api_key=openai_key)
+    
+    # ✨ Your web logic here
+    return jsonify({"summary": "..."})
 ```
 
-## Requirements
+</details>
 
-### Core Dependencies
-- Python 3.10+
-- discord.py (for Discord integration)
-- slack-sdk (for Slack integration)
-- langchain-core (for LLM functionality)
-- langchain-openai (for OpenAI models)
-- langchain-community (for Ollama and other local models)
-- colorama (for colored output)
+<details>
+<summary>🤖 <strong>Discord Bot Example</strong></summary>
 
-## Discord Bot Setup
+```python
+from what_the_chat import DiscordPlatform, ChatService
+import discord
+from discord.ext import commands
 
-1. Create a Discord application at [Discord Developer Portal](https://discord.com/developers/applications)
-2. Create a bot for your application
-3. Enable the following intents for your bot:
-   - Message Content Intent
-4. Generate a token for your bot
-5. Invite the bot to your server with the necessary permissions to read message history
+class SummaryBot(commands.Cog):
+    def __init__(self, bot):
+        self.platform = DiscordPlatform()
+        self.chat_service = ChatService("remote", "gpt-4o", api_key=api_key)
+    
+    @commands.command()
+    async def summarize(self, ctx, days: int):
+        # 🔄 Reuse the platform logic!
+        history, _ = await self.platform.fetch_messages(ctx.bot, ctx.channel.id, since_date)
+        # ✨ Your bot logic here
+```
 
-## Slack Bot Setup
+</details>
 
-1. Create a Slack app at [Slack API](https://api.slack.com/apps)
-2. Add the following OAuth scopes to your bot:
-   - `channels:history` - To read messages from public channels
-   - `groups:history` - To read messages from private channels
-   - `im:history` - To read direct messages
-   - `mpim:history` - To read group direct messages
-   - `users:read` - To get user information
-3. Install the app to your workspace
-4. Copy the Bot User OAuth Token to your `.env` file as `SLACK_TOKEN`
+<details>
+<summary>💼 <strong>Slack Bot Example</strong></summary>
 
-## License
+```python
+from what_the_chat import SlackPlatform, SummarizationService
+from slack_bolt import App
 
-MIT
+app = App(token=slack_token)
+platform = SlackPlatform(slack_token)
+summarizer = SummarizationService("local", "deepseek-r1-distill-qwen-7b")
 
-## Contributing
+@app.command("/summarize")
+def summarize_command(ack, say, command):
+    # 🔄 Reuse the platform and summarization logic
+    # ✨ Your Slack bot logic here
+    pass
+```
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+</details>
+
+---
+
+## 💬 **Interactive Chat Commands**
+
+When chatting with your history, use these commands:
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `help` | 📋 Show available commands | `help` |
+| `exit`, `quit`, `q` | 👋 End chat gracefully | `quit` |
+| `summary` | 📊 Generate new summary | `summary` |
+| `users` | 👥 List all users in chat | `users` |
+| `Ctrl+C` | ⚡ Quick exit | *keyboard shortcut* |
+
+---
+
+## 📁 **Package Structure**
+
+```
+📦 what_the_chat/
+├── 📄 __init__.py              # Main package exports
+├── 🔧 summarize.py             # High-level API & compatibility  
+├── 🌐 platforms/               # Platform integrations
+│   ├── 🎮 discord.py          # Discord platform class
+│   └── 💼 slack.py            # Slack platform class
+├── 🤖 llm/                    # LLM services
+│   ├── 📊 summarization.py    # Summary generation
+│   └── 💬 chat.py             # Interactive chat
+├── 🛠️ utils/                  # Utilities
+│   └── ✨ formatting.py       # Text processing
+└── 📋 models/                 # Data models
+    └── 💌 message.py          # Message & ChatHistory classes
+📁 scripts/
+└── 🚀 launch_cli.py           # CLI application entry point
+```
+
+---
+
+## 🔧 **Setup Guides**
+
+<details>
+<summary>🎮 <strong>Discord Bot Setup</strong></summary>
+
+### Discord Bot Configuration
+
+1. 🌐 Go to [Discord Developer Portal](https://discord.com/developers/applications)
+2. ➕ **Create New Application** → Name it (e.g., "Chat Summarizer")
+3. 🤖 Go to **Bot** section → **Add Bot**
+4. ⚙️ **Enable these Bot Permissions:**
+   - ✅ Read Message History
+   - ✅ View Channels  
+   - ✅ Read Messages/View Channels
+5. 🔐 **Enable Privileged Gateway Intents:**
+   - ✅ **Message Content Intent** (important!)
+6. 🔑 Copy the **Bot Token** → Add to your `.env` as `DISCORD_TOKEN`
+7. 🎯 **Invite Bot to Server:**
+   - Go to **OAuth2** → **URL Generator**
+   - Select **bot** scope
+   - Select **Read Message History** permission
+   - Use generated URL to invite bot
+
+</details>
+
+<details>
+<summary>💼 <strong>Slack App Setup</strong></summary>
+
+### Slack App Configuration  
+
+1. 🌐 Go to [Slack API](https://api.slack.com/apps)
+2. ➕ **Create New App** → **From scratch**
+3. 🔐 **Add OAuth Scopes** (in OAuth & Permissions):
+   - `channels:history` - 📖 Read public channel messages
+   - `groups:history` - 📖 Read private channel messages  
+   - `im:history` - 📖 Read direct messages
+   - `mpim:history` - 📖 Read group DMs
+   - `users:read` - 👥 Get user information
+4. 🏢 **Install App to Workspace**
+5. 🔑 Copy **Bot User OAuth Token** → Add to `.env` as `SLACK_TOKEN`
+
+</details>
+
+---
+
+## 🎨 **Command Line Arguments**
+
+| Argument | Description | Example | Required |
+|----------|-------------|---------|----------|
+| `--since-days` | 📅 Days to look back | `--since-days 7` | ✅ |
+| `--platform` | 🌐 Discord or Slack | `--platform slack` | ❌ (default: discord) |
+| `--channel` | 📺 Channel ID/name | `--channel general` | ✅ |
+| `--model-source` | 🤖 Local or remote AI | `--model-source remote` | ❌ (default: local) |
+| `--model` | 🧠 Specific model name | `--model gpt-4o` | ❌ |
+| `--dump-file` | 💾 Save summary to file | `--dump-file ./output` | ❌ |
+| `--dump-collected-chat-history` | 📁 Save full chat history | *(flag)* | ❌ |
+| `--chat` | 💬 Start interactive chat | *(flag)* | ❌ |
+
+---
+
+## ⚡ **Requirements**
+
+### 🐍 **Core Dependencies**
+- **Python 3.10+** 
+- **discord.py** (🎮 Discord integration)
+- **slack-sdk** (💼 Slack integration)  
+- **langchain-core** (🤖 LLM functionality)
+- **langchain-openai** (☁️ OpenAI models)
+- **langchain-community** (🏠 Local models via Ollama)
+- **colorama** (🎨 Colored terminal output)
+
+---
+
+## 📄 **License**
+
+**MIT License** - feel free to use this in your own projects! 🎉
+
+---
+
+## 🤝 **Contributing**
+
+Contributions are **super welcome**! 🙌
+
+- 🐛 **Found a bug?** Open an issue
+- 💡 **Have an idea?** Start a discussion  
+- 🔧 **Want to contribute?** Submit a PR
+
+---
+
+<div align="center">
+
+### 🌟 **Made with ❤️ for better team communication** 
+
+**Star this repo if you find it useful!** ⭐
+
+</div>
