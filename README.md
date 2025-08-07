@@ -9,8 +9,6 @@ https://github.com/user-attachments/assets/efc9d54e-eff4-4528-b7dd-43994660e96d
 [![CI](https://github.com/ulfaslak/what-the-chat/workflows/CI/badge.svg)](https://github.com/ulfaslak/what-the-chat/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Discord](https://img.shields.io/badge/Discord-7289DA?logo=discord&logoColor=white)](https://discord.com/)
-[![Slack](https://img.shields.io/badge/Slack-4A154B?logo=slack&logoColor=white)](https://slack.com/)
 [![Beta](https://img.shields.io/badge/status-beta-orange.svg)](https://github.com/ulfaslak/what-the-chat)
 [![codecov](https://codecov.io/gh/ulfaslak/what-the-chat/branch/main/graph/badge.svg)](https://codecov.io/gh/ulfaslak/what-the-chat)
 
