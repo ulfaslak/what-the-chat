@@ -6,9 +6,13 @@ https://github.com/user-attachments/assets/efc9d54e-eff4-4528-b7dd-43994660e96d
 
 <div align="center">
 
+[![CI](https://github.com/ulfaslak/what-the-chat/workflows/CI/badge.svg)](https://github.com/ulfaslak/what-the-chat/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![Discord](https://img.shields.io/badge/Discord-7289DA?logo=discord&logoColor=white)](https://discord.com/)
+[![Slack](https://img.shields.io/badge/Slack-4A154B?logo=slack&logoColor=white)](https://slack.com/)
 [![Beta](https://img.shields.io/badge/status-beta-orange.svg)](https://github.com/ulfaslak/what-the-chat)
+[![codecov](https://codecov.io/gh/ulfaslak/what-the-chat/branch/main/graph/badge.svg)](https://codecov.io/gh/ulfaslak/what-the-chat)
 
 </div>
 
@@ -239,6 +243,30 @@ Once you're in the chat session, use these commands:
 
 </details>
 
+
+## 🧪 Testing & CI
+
+This package includes a comprehensive test suite with automated CI/CD:
+
+### **Running Tests Locally**
+```bash
+# Run all tests
+pixi run -e test pytest tests/ -v
+
+# Run with coverage
+pixi run -e test pytest tests/ --cov=what_the_chat --cov-report=term
+
+# Run specific test file
+pixi run -e test pytest tests/test_models.py -v
+```
+
+### **Automated Testing**
+- ✅ **GitHub Actions CI** - Tests on Python 3.10, 3.11, and 3.12
+- ✅ **Test Coverage** - Reports sent to Codecov  
+- ✅ **Package Installation** - Verifies pip installation works
+- ✅ **Import Validation** - Ensures all classes import correctly
+
+**Status badges** in the header show real-time build and coverage status!
 
 ## 🤝 Contributing
 
