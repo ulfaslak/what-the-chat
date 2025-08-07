@@ -10,7 +10,7 @@ dependencies = [
 ]
 description = "What the Chat allows you to summarize and chat with chat history from Discord and Slack."
 name = "what_the_chat"
-requires-python = ">= 3.10"
+requires-python = ">= 3.10, < 3.13"
 version = "0.2.0"
 readme = "README.md"
 license = {text = "MIT"}
