@@ -33,7 +33,7 @@ Repository = "https://github.com/ulfaslak/what-the-chat"
 Issues = "https://github.com/ulfaslak/what-the-chat/issues"
 
 [project.optional-dependencies]
-test = ["pytest"]
+test = ["pytest", "pytest-asyncio"]
 
 [build-system]
 build-backend = "hatchling.build"

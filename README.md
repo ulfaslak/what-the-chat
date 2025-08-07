@@ -210,37 +210,6 @@ Once you're in the chat session, use these commands:
 | `users` | 👥 List all users in chat |
 | `Ctrl+C` | ⚡ Quick exit |
 
-## 📁 Package Structure
-
-```
-what_the_chat/
-├── __init__.py              # Main package exports
-├── summarize.py             # High-level API & compatibility layer
-├── platforms/               # Platform integrations
-│   ├── discord.py          # Discord platform class
-│   └── slack.py            # Slack platform class
-├── llm/                    # LLM services
-│   ├── summarization.py    # Summary generation service
-│   └── chat.py             # Interactive chat service
-├── utils/                  # Utilities
-│   └── formatting.py       # Text processing utilities
-└── models/                 # Data models
-    └── message.py          # Message and ChatHistory classes
-scripts/
-└── launch_cli.py           # CLI application entry point
-```
-
-## 📋 Requirements
-
-### Core Dependencies
-- 🐍 **Python 3.10+**
-- 🎮 **discord.py** - Discord integration
-- 💼 **slack-sdk** - Slack integration  
-- 🧠 **langchain-core** - LLM functionality
-- 🌐 **langchain-openai** - OpenAI models
-- 🏠 **langchain-community** - Ollama and local models
-- 🎨 **colorama** - Colored terminal output
-
 ## 🔧 Setup Guides
 
 <details>
@@ -270,15 +239,12 @@ scripts/
 
 </details>
 
-## 📄 License
-
-MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are most welcome! Please feel free to submit a Pull Request.
 
----
+<br><br><br>
 
 <div align="center">
 
